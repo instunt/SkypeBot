@@ -62,20 +62,31 @@ bot.dialog('determineQuery', [
     builder.Prompts.text(session, "Please enter your question:")
   },
   function (session, results) {      
-//    var sql = `SELECT Word word
-//            FROM Words
-//            WHERE Category = "keywords"
-//            `;
-          
-//      wordsDB.each(sql, (err, row) => {
-//        if (err) {
-//        throw err;
-//        }       
-//      });
     
     var splitted = results.response.split(" ");
     var keywords = "keywords: " 
     for (var i = 0; i < splitted.length; i++) {
+      var word = splitted[i]
+      var sql =  `SELECT Word word
+                FROM Words
+                WHERE Category = "keywords"
+                AND Word = ?      
+                `;
+       
+       wordsDB.each(sql, [word], (err, row) => {
+          if (err) {
+            throw err;
+          }
+         if (row.word !== undefined) {
+         //here is a check if word is a keyword
+         console.log("keyword")         
+         
+         //next, select all ticket IDs from indexTickets for keyword
+         // then compile a list of tickets with all keywords included and return
+         
+         } 
+       }       
+       )            
       keywords = keywords + " , " + splitted[i]
     }          
          
