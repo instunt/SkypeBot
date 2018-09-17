@@ -1,0 +1,18 @@
+{
+    "name": "TestBot",
+    "description": "",
+    "services": [
+        {
+            "type": "endpoint",
+            "appId": "",
+            "appPassword": "",
+            "endpoint": "http://localhost:3978/api/messages",
+            "id": "08019e60-b6c0-11e8-bba6-85efb3bf1534",
+            "name": "http://localhost:3978/api/messages"
+        }
+    ],
+    "secretKey": "",
+    "version": "2.0",
+    "overrides": null,
+    "path": "C:\\Users\\Instunt\\PYTHON\\Jarvis\\Skype\\TestBot\\TestBot.bot"
+}
