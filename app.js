@@ -3,6 +3,9 @@
 var restify = require('restify');
 var builder = require('botbuilder');
 var inMemoryStorage = new builder.MemoryBotStorage();
+var _ = require('lodash')
+var array = require('lodash/array')
+
 const sqlite3 = require('sqlite3');
 
 var wordsDB = new sqlite3.Database('Words.sqlite', sqlite3.OPEN_READONLY, (err) => {
@@ -11,6 +14,16 @@ var wordsDB = new sqlite3.Database('Words.sqlite', sqlite3.OPEN_READONLY, (err) 
   }
   console.log('Connected to the words database.');
 });
+
+var indxDB = new sqlite3.Database('Index.sqlite', sqlite3.OPEN_READONLY, (err) => {
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Connected to the index database.');    
+});
+
+  
+
 //var mysql = require('mysql');
 
 //var con = mysql.createConnection({
@@ -63,11 +76,12 @@ bot.dialog('determineQuery', [
   },
   function (session, results) {      
     
-    var splitted = results.response.split(" ");
-    var keywords = "keywords: " 
+    let splitted = results.response.split(" ");
+    var keywords = "keywords: "
+    var ticketArray = [] 
     for (var i = 0; i < splitted.length; i++) {
-      var word = splitted[i]
-      var sql =  `SELECT Word word
+      let word = splitted[i]
+      let sql =  `SELECT Word word
                 FROM Words
                 WHERE Category = "keywords"
                 AND Word = ?      
@@ -79,16 +93,51 @@ bot.dialog('determineQuery', [
           }
          if (row.word !== undefined) {
          //here is a check if word is a keyword
-         console.log("keyword")         
+         //console.log("keyword")
+         //console.log(row.word)
          
+         let sqlin = `SELECT Tickets tickets
+                     FROM Indx
+                     WHERE Word = ?`;
+         
+         indxDB.each(sqlin, [row.word], (err, row2) => {
+          if (err) {
+            throw err;
+          }
+          if (row2.tickets !== undefined) {
+            
+            //console.log(row2.tickets)
+            let ticketSplit = row2.tickets.split(",");
+            for (var a = 0; a < ticketSplit.length; a++) {
+              let ticketID = ticketSplit[i]
+              ticketArray.push(ticketSplit[i])
+              //console.log(ticketID)
+            
+            }
+            
+            
+          }
+         })
+                         
          //next, select all ticket IDs from indexTickets for keyword
          // then compile a list of tickets with all keywords included and return
          
          } 
        }       
        )            
-      keywords = keywords + " , " + splitted[i]
-    }          
+      keywords = keywords + splitted[i] + " "
+    } 
+    
+    
+    unique = _.uniq(ticketArray)
+    console.log(unique)
+    
+    for (var o = 0; o < unique.length; o++) {
+      console.log(unique[o])
+    }
+    
+    
+             
          
     session.send("%s", keywords)
     session.endDialogWithResult(results);
