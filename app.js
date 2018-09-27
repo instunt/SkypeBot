@@ -48,12 +48,20 @@ wordsDB.getAsync = function (sql) {
 
 indxDB.getAsync = function (sql) {
   var that = this;
-  return new Promise(function (resolve, reject) {
-    that.get(sql, function(err) {
+  const results = []
+  return new Promise((resolve, reject) => {
+    indxDB.each(sql , (err, row) => {
       if (err)
         reject(err);
       else
-        resolve();
+        results.push(row);
+    }, (err, n) => {
+      if (err) {
+        reject(err);
+      }
+      else {
+        resolve(results);      
+      }        
     });
   })
 };
@@ -70,13 +78,29 @@ async function keywordSelection(word) {
    console.log("word not found");
   }
   else {
-    console.log("found");
-    console.log(row);
-    
+    console.log("word found");    
   } 
-  val = row;
+  val = 1
   return val;   
 } 
+
+async function ticketSelection(word) {
+   var val;
+   var sqlStmt = `SELECT Tickets tickets
+                  FROM Indx
+                  WHERE Word ="${word}"`;
+   console.log(sqlStmt);
+   var row = await indxDB.getAsync(sqlStmt)
+   if (!row) {
+    console.log("ticket not found")
+   }
+   else {
+    console.log("tickets found")
+    val = row
+    return row[0].tickets;
+   }
+}
+
 
 
 //Setup Restify Server
@@ -117,49 +141,26 @@ bot.dialog('determineQuery', [
     
     let splitted = results.response.split(" ");
     var keywords = "keywords: " 
-    
+    var arrayz = []
+        
     for (var i = 0; i < splitted.length; i++) {
       let word = splitted[i]      
       var keywordOk = await keywordSelection(word) 
-      console.log()
-      keywords = keywords + splitted[i] + " "
+      keywords = keywords + splitted[i] + " " 
     
-    //     if (row.word !== undefined) {
-         //here is a check if word is a keyword
-         //console.log("keyword")
-         //console.log(row.word)
-         
- //        let sqlin = `SELECT Tickets tickets
- //                    FROM Indx
- //                    WHERE Word = ?`;
-         
- //        indxDB.each(sqlin, [row.word], (err, row2) => {
- //         if (err) {
-//            throw err;
- //         }
- //         if (row2.tickets !== undefined) {
-            
-            //console.log(row2.tickets)
-//            let ticketSplit = row2.tickets.split(",");
-//            for (var a = 0; a < ticketSplit.length; a++) {
-//              let ticketID = ticketSplit[i]
-//              ticketArray.push(ticketSplit[i])
-              //console.log(ticketID)
-            
- //           }
-            
-            
-//          }
-//         })
-                         
-         //next, select all ticket IDs from indexTickets for keyword
-         // then compile a list of tickets with all keywords included and return
-         
-//         } 
-       }       
+      if (keywordOk == 1) {
+        var ticketsSel = await ticketSelection(word)        
+
+        var ticketSplit = ticketsSel.split(",");
+        arrayz.push(ticketSplit)
+      }    
+  }
+  var intersect = _.intersection(...arrayz)
+  
+              
                   
       
-      session.send("%s", keywords)
+      session.send("%s", intersect)
       session.endDialogWithResult(results);
     } 
 ]);
