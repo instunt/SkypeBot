@@ -22,6 +22,13 @@ var indxDB = new sqlite3.Database('Index.sqlite', sqlite3.OPEN_READONLY, (err) =
   console.log('Connected to the index database.');    
 });
 
+var ticketsDB = new sqlite3.Database('M42_TData.sqlite', sqlite3.OPEN_READONLY, (err) => {
+  if (err) {
+    console.error(err.message);
+  }
+  console.log('Connected to the index database.');    
+});
+
 
 
 /// Sqlite functions
@@ -66,6 +73,27 @@ indxDB.getAsync = function (sql) {
   })
 };
 
+ticketsDB.getAsync = function (sql) {
+  var that = this;
+  const results = []
+  return new Promise((resolve, reject) => {
+    ticketsDB.each(sql , (err, row) => {
+      if (err)
+        reject(err);
+      else
+        results.push(row);
+    }, (err, n) => {
+      if (err) {
+        reject(err);
+      }
+      else {
+        resolve(results);      
+      }        
+    });
+  })
+};
+
+
 async function keywordSelection(word) {
   var val;
   var sqlStmt = `SELECT Word
@@ -99,6 +127,26 @@ async function ticketSelection(word) {
     val = row
     return row[0].tickets;
    }
+}
+
+async function ticketDataSelection(ticket) {
+  var val
+  var sqlStmt = `SELECT Category category
+                  FROM TicketData
+                  WHERE TicketID ="${ticket}"`;
+                  
+  console.log(sqlStmt)
+  var row = await ticketsDB.getAsync(sqlStmt)
+  if (!row) {
+    console.log("ticket not found")
+  }
+  else {
+    console.log("ticket found")
+    val = row
+    console.log(row[0].category)
+    return row[0].category;
+  }
+                  
 }
 
 
@@ -157,8 +205,21 @@ bot.dialog('determineQuery', [
   }
   var intersect = _.intersection(...arrayz)
   
-              
-                  
+  
+  var arrayCat = [] 
+  for (var i = 0; i < intersect.length; i++) {
+    var category = await ticketDataSelection(intersect[i].trim())
+    arrayCat.push(category)
+    
+  }
+  
+  
+  var map = _.countBy(arrayCat)
+  var mapSort = _.sortBy(map, [function(o) { return o[0]; }])
+      
+  console.log(arrayCat)         
+  console.log(map)
+  console.log(mapSort)                  
       
       session.send("%s", intersect)
       session.endDialogWithResult(results);
