@@ -29,8 +29,6 @@ var ticketsDB = new sqlite3.Database('M42_TData.sqlite', sqlite3.OPEN_READONLY, 
   console.log('Connected to the index database.');    
 });
 
-
-
 /// Sqlite functions
 
 wordsDB.getAsync = function (sql) {
@@ -143,7 +141,7 @@ async function ticketDataSelection(ticket) {
   else {
     console.log("ticket found")
     val = row
-    console.log(row[0].category)
+    //console.log(row[0].category)
     return row[0].category;
   }
                   
@@ -174,7 +172,7 @@ var bot = new builder.UniversalBot(connector, [
   },
   function (session, results) {
     session.dialogData.queryData = results.response;
-    session.send(`Thank you, query has been confirmed and you requested: ${session.dialogData.queryData}`)
+ //   session.send(`Thank you, query has been confirmed and you requested: ${session.dialogData.queryData}`)
     session.endDialog();
   }
                                    
@@ -186,7 +184,7 @@ bot.dialog('determineQuery', [
     builder.Prompts.text(session, "Please enter your question:")
   },
   async function (session, results) {      
-    
+    session.send("Processing...");
     let splitted = results.response.split(" ");
     var keywords = "keywords: " 
     var arrayz = []
@@ -212,16 +210,42 @@ bot.dialog('determineQuery', [
     arrayCat.push(category)
     
   }
+   
+ var map = _.countBy(arrayCat)
+ console.log(map)
+ var firstHighest = 0;
+ var firstHD = "";
+ var totalCount = 0;
+ 
+ // later add logic to display also second highest if there is not a big difference, or create an array with top results, which are not so much apart
+ 
+ 
+ for (var el in map) {
+  if (map.hasOwnProperty(el)) {
+    totalCount = totalCount + map[el]
+    if (map[el] > firstHighest) {
+      firstHighest = map[el];
+      firstHD = el;
+      
+    }
+
+    
+  }
+ 
+ };
+ 
+ var percentageTotal = ( firstHighest / totalCount ) * 100;
+ 
+ console.log(firstHighest);
+ console.log(firstHD);
+ console.log(percentageTotal + " %");
+               
   
   
-  var map = _.countBy(arrayCat)
-  var mapSort = _.sortBy(map, [function(o) { return o[0]; }])
+  
+var returnString = firstHD + " " + percentageTotal + "%"                 
       
-  console.log(arrayCat)         
-  console.log(map)
-  console.log(mapSort)                  
-      
-      session.send("%s", intersect)
+      session.send("Role corresponding to your query is: %s", returnString )
       session.endDialogWithResult(results);
     } 
 ]);
