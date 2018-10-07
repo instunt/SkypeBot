@@ -93,20 +93,21 @@ ticketsDB.getAsync = function (sql) {
 
 
 async function keywordSelection(word) {
-  var val;
+  var val = 0;
   var sqlStmt = `SELECT Word
                 FROM Words
                 WHERE Category = "keywords"
                 AND Word ="${word}"`;
-  console.log(sqlStmt);
+//  console.log(sqlStmt);
   var row = await wordsDB.getAsync(sqlStmt)
   if (!row) {
    console.log("word not found");
   }
-  else {
-    console.log("word found");    
+  else if (typeof row[0] != 'undefined' ) {
+    console.log("word found");
+    val = 1;    
   } 
-  val = 1
+  
   return val;   
 } 
 
@@ -115,15 +116,22 @@ async function ticketSelection(word) {
    var sqlStmt = `SELECT Tickets tickets
                   FROM Indx
                   WHERE Word ="${word}"`;
-   console.log(sqlStmt);
+ //  console.log(sqlStmt);
    var row = await indxDB.getAsync(sqlStmt)
    if (!row) {
     console.log("ticket not found")
    }
-   else {
+   else if (typeof row[0] != 'undefined' ) {
     console.log("tickets found")
     val = row
-    return row[0].tickets;
+  //  console.log(row)
+    try {
+      return row[0].tickets;
+    }
+    catch (err) {
+      throw err;
+    }
+    
    }
 }
 
@@ -138,11 +146,17 @@ async function ticketDataSelection(ticket) {
   if (!row) {
     console.log("ticket not found")
   }
-  else {
+  else if (typeof row != 'undefined' ) {
     console.log("ticket found")
     val = row
     //console.log(row[0].category)
+    try {
     return row[0].category;
+  }
+  catch (err) {
+    throw (err)
+  }
+    
   }
                   
 }
@@ -185,25 +199,37 @@ bot.dialog('determineQuery', [
   },
   async function (session, results) {      
     session.send("Processing...");
-    let splitted = results.response.split(" ");
+    let inputString = results.response.toLowerCase();
+    let splitted = inputString.split(" ");
     var keywords = "keywords: " 
     var arrayz = []
         
     for (var i = 0; i < splitted.length; i++) {
       let word = splitted[i]      
       var keywordOk = await keywordSelection(word) 
-      keywords = keywords + splitted[i] + " " 
+      
     
       if (keywordOk == 1) {
-        var ticketsSel = await ticketSelection(word)        
+        try {
+          keywords = keywords + splitted[i] + " " 
+          var ticketsSel = await ticketSelection(word)
+          if (typeof ticketsSel != 'undefined'){
+          
+            var ticketSplit = ticketsSel.split(",");
+            arrayz.push(ticketSplit)
+          }
+        }
+        catch (err) {
+          throw err;
+        }
+                
 
-        var ticketSplit = ticketsSel.split(",");
-        arrayz.push(ticketSplit)
+
       }    
   }
   var intersect = _.intersection(...arrayz)
   
-  
+  console.log(arrayz)
   var arrayCat = [] 
   for (var i = 0; i < intersect.length; i++) {
     var category = await ticketDataSelection(intersect[i].trim())
@@ -212,7 +238,7 @@ bot.dialog('determineQuery', [
   }
    
  var map = _.countBy(arrayCat)
- console.log(map)
+ console.log(keywords)
  var firstHighest = 0;
  var firstHD = "";
  var totalCount = 0;
