@@ -266,9 +266,7 @@ bot.dialog('determineQuery', [
  console.log(firstHD);
  console.log(percentageTotal + " %");
                
-  
-  
-  
+   
 var returnString = firstHD + " " + percentageTotal + "%"                 
       
       session.send("Role corresponding to your query is: %s", returnString )
