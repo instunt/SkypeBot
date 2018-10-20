@@ -155,18 +155,19 @@ with open('indexTickets.json', 'rb') as files:
   
   
 progress = 1  
-for a in index.keys():
-  t = list()
-  tckts = str(index[a].keys())
+for a in index.keys():  #zastalo na 210873
+  if progress > 210873:
+    t = list()
+    tckts = str(index[a].keys())
 
-  tckts = tckts.replace('[', '').replace(']', '')
-  tckts = tckts.replace("u'", "").replace("'","")
+    tckts = tckts.replace('[', '').replace(']', '')
+    tckts = tckts.replace("u'", "").replace("'","")
   
-  t.append(a)
-  t.append(tckts)
+    t.append(a)
+    t.append(tckts)
   
-  c.execute(insertWords,t)                                                                
-  con.commit()
+    c.execute(insertWords,t)                                                                
+    con.commit()
   
   print "pokrok: " + str(progress) + " z " + str(len(index.keys())) 
   progress += 1

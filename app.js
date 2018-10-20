@@ -104,7 +104,7 @@ async function keywordSelection(word) {
    console.log("word not found");
   }
   else if (typeof row[0] != 'undefined' ) {
-    console.log("word found");
+    //console.log("word found");
     val = 1;    
   } 
   
@@ -122,7 +122,7 @@ async function ticketSelection(word) {
     console.log("ticket not found")
    }
    else if (typeof row[0] != 'undefined' ) {
-    console.log("tickets found")
+    //console.log("tickets found")
     val = row
   //  console.log(row)
     try {
@@ -135,23 +135,28 @@ async function ticketSelection(word) {
    }
 }
 
-async function ticketDataSelection(ticket) {
+async function ticketDataSelection(ticketClause) {
   var val
   var sqlStmt = `SELECT Category category
                   FROM TicketData
-                  WHERE TicketID ="${ticket}"`;
-                  
-  console.log(sqlStmt)
+                  WHERE TicketID in ${ticketClause}`;
+                   
+ // console.log(sqlStmt)
   var row = await ticketsDB.getAsync(sqlStmt)
   if (!row) {
     console.log("ticket not found")
   }
   else if (typeof row != 'undefined' ) {
-    console.log("ticket found")
-    val = row
+    //console.log("ticket found")
+    //val = row
     //console.log(row[0].category)
+    ret = []
     try {
-    return row[0].category;
+      for (var iy = 0; iy < row.length; iy++) {
+        val = row[iy].category;
+        ret.push(val)   
+  }        
+    return ret;
   }
   catch (err) {
     throw (err)
@@ -227,18 +232,22 @@ bot.dialog('determineQuery', [
 
       }    
   }
+  
   var intersect = _.intersection(...arrayz)
   
-  console.log(arrayz)
+ // console.log(arrayz)
   var arrayCat = [] 
   for (var i = 0; i < intersect.length; i++) {
-    var category = await ticketDataSelection(intersect[i].trim())
-    arrayCat.push(category)
+    intersect[i] = (intersect[i].trim())
     
   }
+  var ticketClause = '( \"' + intersect.join("\", \"") + '\" )';
+  //console.log(ticketClause)
+  var arrayCat = await ticketDataSelection(ticketClause)
+  console.log(arrayCat)
    
  var map = _.countBy(arrayCat)
- console.log(keywords)
+// console.log(keywords)
  var firstHighest = 0;
  var firstHD = "";
  var totalCount = 0;
@@ -285,7 +294,7 @@ bot.recognizer({
   var intent = {score: 0.0 };
   
     if (context.message.text) {
-      switch (context.message.text.toLowerCase()) {
+      switch (context.message.text.toLowerCase()) {  
         case 'help':
           intent = { score: 1.0, intent: 'Help' };
           break;
