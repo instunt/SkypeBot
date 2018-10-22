@@ -185,8 +185,7 @@ server.post('/api/messages', connector.listen());
 
 //Receive messages from user and echo
 var bot = new builder.UniversalBot(connector, [
-  function (session) {
-    session.send("Hello, how can I help you?");
+  function (session) { 
     session.beginDialog('determineQuery');
   },
   function (session, results) {
@@ -198,13 +197,10 @@ var bot = new builder.UniversalBot(connector, [
 ]).set('storage', inMemoryStorage);
 
   
-bot.dialog('determineQuery', [
-  function (session) {
-    builder.Prompts.text(session, "Please enter your question:")
-  },
+bot.dialog('determineQuery', [ 
   async function (session, results) {      
     session.send("Processing...");
-    let inputString = results.response.toLowerCase();
+    let inputString = session.message.text.toLowerCase();
     let splitted = inputString.split(" ");
     var keywords = "keywords: " 
     var arrayz = []
@@ -284,8 +280,12 @@ var returnString = firstHD + " " + percentageTotal + "%"
 ]);
 
 bot.dialog('helpDialog', function (session) {
-  session.endDialog("This is helper dialog. Say 'goodbye to end")
+  session.endDialog("Please enter text to determine SAP module")
 }).triggerAction({matches: 'Help'});
+
+bot.dialog('helloDialog', function(session) {
+  session.endDialog("Hello, please start by inserting text and the SAP module will be determined. Enter Help to get help")}).triggerAction({matches: 'Hello' });
+
 
 bot.endConversationAction('goodbyeAction', "Bye!", { matches: 'Goodbye' });
 
@@ -301,10 +301,14 @@ bot.recognizer({
         case 'goodbye':
           intent = { score: 1.0, intent: 'Goodbye' };
           break;
+        case 'hello':
+          intent = { score: 1.0, intent: 'Hello' };
       }
     }
     done(null, intent);
   }
 });
+
+
 
 
